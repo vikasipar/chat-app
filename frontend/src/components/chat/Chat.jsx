@@ -11,69 +11,67 @@ let socket;
 const Chat = () => {
   const[id, setId] = useState("");
   const[messages, setMessages] = useState([]);
+  const[msgInput, setMsgInput] = useState("");
 
   const send = () => {
-    const message = document.getElementById('chatInput').value;
-    socket.emit('message', {message, id});
-    document.getElementById('chatInput').value = "";
+    if(msgInput.trim() !== ""){
+      socket.emit('message', { message: msgInput, id});
+      setMsgInput("");
+    }
   }
 
   useEffect(() => {
     socket = socketIo(ENDPOINT, { transports: ['websocket']});
 
     socket.on('connect', () => {
-      alert("socket connected");
+      // alert("socket connected");
       setId(socket.id);
     })
 
-    socket.emit('joined', {user});  // sending to backend
+    socket.emit('joined', {user});  
 
-    socket.on('welcome',(data) => {
-      setMessages([...messages, data]);
-      console.log(data.user, data.message);
-    })
+    // socket.on('welcome',(data) => {
+    //   setMessages((preMsg) => [...preMsg, data]);
+    // })
 
     socket.on('userJoined', (data) => {
-      setMessages([...messages, data]);
-      console.log(data.user, data.message);
+      setMessages((preMsg) => [...preMsg, data]);
     })
 
     socket.on('leave', (data) => {
-      setMessages([...messages, data]);
-      console.log(data.user, data.message);
+      setMessages((preMsg) => [...preMsg, data]);
     })
 
     return () => {
-      socket.emit('disconnected');
       socket.off();
     }
 }, []);
 
 useEffect(() => {
   socket.on('sendMessage', (data) => {
-    setMessages([...messages, data]);
-    console.log(data.user, data.message, data.id);
+    setMessages((preMsg) => [...preMsg, data]);
   })
   return () => {
-    socket.off();
+    socket.off('sendMessage');
   }
 },[messages])
   
   return (
-    <>
-      <div>Hii {user}!</div>
-      <div className='w-[50%] h-screen mx-auto border-2 border-stone-500'>
-        <ReactScrollToBottom className='h-[90vh] space-y-1 overflow-y-scroll'>
+    <div className='flex h-screen bg-[#c4c1c1ef]'>
+      <div className='w-full sm:w-[90%] md:w-[45%] h-full sm:h-[90vh] m-auto border-8 border-[#0c7c6f] bg-[#d6d6d6] rounded shadow-lg drop-shadow-lg'  style={{backgroundImage:'url("https://i.pinimg.com/originals/ab/ab/60/abab60f06ab52fa7846593e6ae0c9a0b.png")', backgroundSize:'contain'}}>
+        <div className='w-full bg-[#0c7c6f] text-white text-xl font-semibold p-2'>Chat Room</div>
+        <ReactScrollToBottom className='h-[85vh] sm:h-[75vh] overflow-y-hidden'>
           {
-            messages.map((msg, i) => <Message user={msg.id === id ? '': msg.user} message={msg.message} classs={msg.id === id ? 'right' : 'left'} />)
+            messages.map((msg, i) => <Message key={i} user={msg.id === id ? '': msg.user} message={msg.message} />)
           }
         </ReactScrollToBottom>
-        <div className='bottom-0 w-[90%] mx-auto'>
-          <input type='text' id='chatInput' className='border-[1px] border-black p-1 w-[83%]' />
-          <button onClick={send} className='border-[1px] border-black bg-black text-white p-1'>send</button>
+
+        <div className='bottom-0 w-full text-lg font-semibold mx-0'>
+          <input type='text' className='border-2 border-[#0c7c6f] p-1 w-[83%] sm:w-[83%] mx-auto' value={msgInput} onChange={(e) => setMsgInput(e.target.value)} onKeyPress={(e) => { if(e.key === 'Enter'){ send(); }}} />
+          <button onClick={send} className='border-2 border-[#075e54] bg-[#0c7c6f] text-white p-1'>send</button>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
