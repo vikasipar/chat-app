@@ -24,22 +24,21 @@ const Chat = () => {
     socket = socketIo(ENDPOINT, { transports: ['websocket']});
 
     socket.on('connect', () => {
-      // alert("socket connected");
       setId(socket.id);
     })
 
     socket.emit('joined', {user});  
 
-    // socket.on('welcome',(data) => {
-    //   setMessages((preMsg) => [...preMsg, data]);
-    // })
+    socket.on('welcome',(data) => {
+        setMessages([...messages, data]);
+    })
 
     socket.on('userJoined', (data) => {
-      setMessages((preMsg) => [...preMsg, data]);
+      setMessages([...messages, data]);
     })
 
     socket.on('leave', (data) => {
-      setMessages((preMsg) => [...preMsg, data]);
+      setMessages([...messages, data]);
     })
 
     return () => {
